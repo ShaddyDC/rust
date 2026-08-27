@@ -1761,6 +1761,16 @@ impl<'a> State<'a> {
 
                 self.word(")");
             }
+            hir::ExprKind::RawHandle(mutbl, expr) => {
+                self.word("raw_handle!(");
+                if mutbl.is_mut() {
+                    self.word_nbsp("mut");
+                } else {
+                    self.word_nbsp("const");
+                }
+                self.print_expr(expr);
+                self.word(")");
+            }
             hir::ExprKind::UnsafeBinderCast(kind, expr, ty) => {
                 match kind {
                     ast::UnsafeBinderCastKind::Wrap => self.word("wrap_binder!("),

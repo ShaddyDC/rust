@@ -813,6 +813,19 @@ impl<'a> State<'a> {
                 self.end(ib);
                 self.pclose();
             }
+            ast::ExprKind::RawHandle(mutbl, expr) => {
+                self.word("builtin # raw_handle");
+                self.popen();
+                let ib = self.ibox(0);
+                if mutbl.is_mut() {
+                    self.word_nbsp("mut");
+                } else {
+                    self.word_nbsp("const");
+                }
+                self.print_expr(expr, FixupContext::default());
+                self.end(ib);
+                self.pclose();
+            }
             ast::ExprKind::MacCall(m) => self.print_mac(m),
             ast::ExprKind::Paren(e) => {
                 self.popen();

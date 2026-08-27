@@ -462,6 +462,9 @@ language_item_table! {
     FieldType,               sym::field_type,              field_type,                 Target::AssocTy(AssocCtxt::Trait),        GenericRequirement::Exact(0);
     FieldOffset,             sym::field_offset,            field_offset,               Target::AssocConst(AssocCtxt::Trait),     GenericRequirement::Exact(0);
 
+    // Place handles.
+    LocalHandle, sym::local_handle, local_handle, Target::Struct, GenericRequirement::Exact(1);
+
     // Used to fallback `{float}` to `f32` when `f32: From<{float}>`
     From,                    sym::From,                from_trait,                 Target::Trait,          GenericRequirement::Exact(1);
     FromFn,                  sym::from,                from_fn,                    Target::Method(MethodKind::Trait { body: false }), GenericRequirement::None;

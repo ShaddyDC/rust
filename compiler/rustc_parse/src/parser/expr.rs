@@ -14,8 +14,8 @@ use rustc_ast::visit::{Visitor, walk_expr};
 use rustc_ast::{
     self as ast, AnonConst, Arm, AssignOp, AssignOpKind, AttrStyle, AttrVec, BinOp, BinOpKind,
     BlockCheckMode, CaptureBy, ClosureBinder, CoroutineKind, DUMMY_NODE_ID, Expr, ExprField,
-    ExprKind, FnDecl, FnRetTy, ForLoop, Guard, Label, MacCall, MetaItemLit, Movability, Param,
-    RangeLimits, StmtKind, Ty, TyKind, UnOp, UnsafeBinderCastKind, YieldKind,
+    ExprKind, FnDecl, FnRetTy, ForLoop, Guard, Label, MacCall, MetaItemLit, Movability, Mutability,
+    Param, RangeLimits, StmtKind, Ty, TyKind, UnOp, UnsafeBinderCastKind, YieldKind,
 };
 use rustc_ast_pretty::pprust;
 use rustc_errors::{Applicability, Diag, PResult, StashKey, Subdiagnostic};
@@ -2043,6 +2043,7 @@ impl<'a> Parser<'a> {
         self.parse_builtin(|this, lo, ident| {
             Ok(match ident.name {
                 sym::offset_of => Some(this.parse_expr_offset_of(lo)?),
+                sym::raw_handle => Some(this.parse_expr_raw_handle(lo)?),
                 sym::type_ascribe => Some(this.parse_expr_type_ascribe(lo)?),
                 sym::wrap_binder => {
                     Some(this.parse_expr_unsafe_binder_cast(lo, UnsafeBinderCastKind::Wrap)?)
@@ -2113,6 +2114,20 @@ impl<'a> Parser<'a> {
 
         let span = lo.to(self.token.span);
         Ok(self.mk_expr(span, ExprKind::OffsetOf(container, fields)))
+    }
+
+    /// Built-in macro for `raw_handle!` expressions.
+    pub(crate) fn parse_expr_raw_handle(&mut self, lo: Span) -> PResult<'a, Box<Expr>> {
+        let mutbl = if self.eat_keyword(exp!(Mut)) {
+            Mutability::Mut
+        } else if self.eat_keyword(exp!(Const)) {
+            Mutability::Not
+        } else {
+            Mutability::Not
+        };
+        let expr = self.parse_expr()?;
+        let span = lo.to(self.token.span);
+        Ok(self.mk_expr(span, ExprKind::RawHandle(mutbl, expr)))
     }
 
     /// Built-in macro for type ascription expressions.
@@ -4496,6 +4511,7 @@ impl MutVisitor for CondChecker<'_> {
             }
             ExprKind::Cast(ref mut op, _)
             | ExprKind::Type(ref mut op, _)
+            | ExprKind::RawHandle(_, ref mut op)
             | ExprKind::UnsafeBinderCast(_, ref mut op, _) => {
                 let forbid_let_reason = self.forbid_let_reason;
                 self.forbid_let_reason = Some(diagnostics::ForbiddenLetReason::OtherForbidden);

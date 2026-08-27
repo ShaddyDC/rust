@@ -399,6 +399,9 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             ExprKind::UnsafeBinderCast(kind, inner_expr, ty) => {
                 self.check_expr_unsafe_binder_cast(expr.span, kind, inner_expr, ty, expected)
             }
+            ExprKind::RawHandle(mutbl, inner_expr) => {
+                self.check_expr_raw_handle(expr, mutbl, inner_expr, expected)
+            }
             ExprKind::Err(guar) => Ty::new_error(tcx, guar),
         }
     }
@@ -531,6 +534,26 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
         if !is_named {
             self.dcx().emit_err(AddressOfTemporaryTaken { span: oprnd.span });
         }
+    }
+
+    fn check_expr_raw_handle(
+        &self,
+        expr: &'tcx hir::Expr<'tcx>,
+        mutbl: hir::Mutability,
+        oprnd: &'tcx hir::Expr<'tcx>,
+        _expected: Expectation<'tcx>,
+    ) -> Ty<'tcx> {
+        let ty = self.check_expr_with_expectation_and_needs(
+            oprnd,
+            NoExpectation,
+            Needs::maybe_mut_place(mutbl),
+        );
+        if let Err(guar) = ty.error_reported() {
+            return Ty::new_error(self.tcx, guar);
+        }
+        self.check_named_place_expr(oprnd);
+        let local_handle_def_id = self.tcx.require_lang_item(LangItem::LocalHandle, expr.span);
+        Ty::new_adt(self.tcx, self.tcx.adt_def(local_handle_def_id), self.tcx.mk_args(&[ty.into()]))
     }
 
     pub(crate) fn check_expr_path(

@@ -582,6 +582,49 @@ impl<'tcx> ThirBuildCx<'tcx> {
                 _ => span_bug!(expr.span, "unexpected type for pinned borrow: {:?}", expr_ty),
             },
 
+            hir::ExprKind::RawHandle(mutbl, arg_expr) => match expr_ty.kind() {
+                &ty::Adt(adt_def, args)
+                    if tcx.is_lang_item(adt_def.did(), LangItem::LocalHandle) =>
+                {
+                    let target_ptr_ty = Ty::new_mut_ptr(tcx, args.type_at(0));
+                    let arg = self.mirror_expr(arg_expr);
+                    let raw_expr = if mutbl.is_mut() {
+                        self.thir.exprs.push(Expr {
+                            temp_scope_id: expr.hir_id.local_id,
+                            ty: target_ptr_ty,
+                            span: expr.span,
+                            kind: ExprKind::RawBorrow { mutability: hir::Mutability::Mut, arg },
+                        })
+                    } else {
+                        let const_ptr_ty = Ty::new_imm_ptr(tcx, args.type_at(0));
+                        let const_raw = self.thir.exprs.push(Expr {
+                            temp_scope_id: expr.hir_id.local_id,
+                            ty: const_ptr_ty,
+                            span: expr.span,
+                            kind: ExprKind::RawBorrow { mutability: hir::Mutability::Not, arg },
+                        });
+                        self.thir.exprs.push(Expr {
+                            temp_scope_id: expr.hir_id.local_id,
+                            ty: target_ptr_ty,
+                            span: expr.span,
+                            kind: ExprKind::Cast { source: const_raw },
+                        })
+                    };
+                    ExprKind::Adt(Box::new(AdtExpr {
+                        adt_def,
+                        variant_index: FIRST_VARIANT,
+                        args,
+                        fields: Box::new([FieldExpr {
+                            name: FieldIdx::from(0u32),
+                            expr: raw_expr,
+                        }]),
+                        user_ty: None,
+                        base: AdtExprBase::None,
+                    }))
+                }
+                _ => span_bug!(expr.span, "unexpected type for raw_handle: {:?}", expr_ty),
+            },
+
             hir::ExprKind::Block(blk, _) => ExprKind::Block { block: self.mirror_block(blk) },
 
             hir::ExprKind::Assign(lhs, rhs, _) => {

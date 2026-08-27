@@ -476,6 +476,11 @@ impl<'tcx, Cx: TypeInformationCtxt<'tcx>, D: Delegate<'tcx>> ExprUseVisitor<'tcx
                 self.borrow_expr(base, bk)?;
             }
 
+            hir::ExprKind::RawHandle(m, base) => {
+                let bk = ty::BorrowKind::from_mutbl(m);
+                self.borrow_expr(base, bk)?;
+            }
+
             hir::ExprKind::InlineAsm(asm) => {
                 for (op, _op_sp) in asm.operands {
                     match op {
@@ -1360,6 +1365,7 @@ impl<'tcx, Cx: TypeInformationCtxt<'tcx>, D: Delegate<'tcx>> ExprUseVisitor<'tcx
             }
 
             hir::ExprKind::AddrOf(..)
+            | hir::ExprKind::RawHandle(..)
             | hir::ExprKind::Call(..)
             | hir::ExprKind::Use(..)
             | hir::ExprKind::Assign(..)

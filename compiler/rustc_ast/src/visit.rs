@@ -1066,6 +1066,8 @@ macro_rules! common_visitor_and_walkers {
                     visit_visitable!($($mut)? vis, f),
                 ExprKind::OffsetOf(container, fields) =>
                     visit_visitable!($($mut)? vis, container, fields),
+                ExprKind::RawHandle(_mutbl, subexpression) =>
+                    visit_visitable!($($mut)? vis, subexpression),
                 ExprKind::Yield(kind) =>
                     visit_visitable!($($mut)? vis, kind),
                 ExprKind::Try(subexpression) =>

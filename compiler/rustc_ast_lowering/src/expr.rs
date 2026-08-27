@@ -435,6 +435,9 @@ impl<'hir> LoweringContext<'_, 'hir> {
                 ),
                 self.arena.alloc_from_iter(fields.iter().map(|&ident| self.lower_ident(ident))),
             ),
+            ExprKind::RawHandle(mutbl, expr) => {
+                hir::ExprKind::RawHandle(*mutbl, self.lower_expr(expr))
+            }
             ExprKind::Struct(se) => {
                 let rest = match se.rest {
                     StructRest::Base(ref e) => hir::StructTailExpr::Base(self.lower_expr(e)),
