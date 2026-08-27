@@ -1,0 +1,10 @@
+[package]
+name = "place_macros"
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+# tidy-alphabetical-start
+place_macros_impl = { path = "place_macros_impl" }
+# tidy-alphabetical-end
+

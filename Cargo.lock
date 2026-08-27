@@ -3026,6 +3026,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
+name = "place_macros"
+version = "0.0.0"
+dependencies = [
+ "place_macros_impl",
+]
+
+[[package]]
+name = "place_macros_impl"
+version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
 name = "polonius-engine"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
