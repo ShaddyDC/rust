@@ -1,0 +1,50 @@
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalType>`
+  --> $DIR/anti-fundamental-downstream-soundness.rs:17:31
+   |
+LL | impl AntiFundamentalTrait for FundamentalWrapper<LocalType> {}
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ impl of `AntiFundamentalTrait` not allowed for `FundamentalWrapper<LocalType>`
+   |
+   = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
+
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalType>`
+  --> $DIR/anti-fundamental-downstream-soundness.rs:20:31
+   |
+LL | impl AntiFundamentalTrait for &FundamentalWrapper<LocalType> {}
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ impl of `AntiFundamentalTrait` not allowed for `&FundamentalWrapper<LocalType>`
+   |
+   = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
+
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalType>`
+  --> $DIR/anti-fundamental-downstream-soundness.rs:23:31
+   |
+LL | impl AntiFundamentalTrait for &mut FundamentalWrapper<LocalType> {}
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ impl of `AntiFundamentalTrait` not allowed for `&mut FundamentalWrapper<LocalType>`
+   |
+   = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
+
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalGeneric<T>>`
+  --> $DIR/anti-fundamental-downstream-soundness.rs:26:34
+   |
+LL | impl<T> AntiFundamentalTrait for FundamentalWrapper<LocalGeneric<T>> {}
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ impl of `AntiFundamentalTrait` not allowed for `FundamentalWrapper<LocalGeneric<T>>`
+   |
+   = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
+
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<Box<LocalType>>`
+  --> $DIR/anti-fundamental-downstream-soundness.rs:29:31
+   |
+LL | impl AntiFundamentalTrait for FundamentalWrapper<Box<LocalType>> {}
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ impl of `AntiFundamentalTrait` not allowed for `FundamentalWrapper<Box<LocalType>>`
+   |
+   = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
+
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalGeneric<u8>>`
+  --> $DIR/anti-fundamental-downstream-soundness.rs:38:31
+   |
+LL | impl AntiFundamentalTrait for <LocalType as Helper>::Assoc {}
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ impl of `AntiFundamentalTrait` not allowed for `<LocalType as Helper>::Assoc`
+   |
+   = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
+
+error: aborting due to 6 previous errors
+

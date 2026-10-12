@@ -46,4 +46,14 @@ impl DisjointFromDerefMut for Pin<LocalType> {}
 impl DisjointFromDerefMut for Pin<&LocalType> {}
 impl DisjointFromDerefMut for Pin<&mut LocalPinned> {}
 
+// Nested fundamental types are knowable as well.
+trait DisjointFromDerefNested {}
+impl<T: Deref> DisjointFromDerefNested for T {}
+impl DisjointFromDerefNested for Pin<Pin<LocalType>> {}
+
+trait DisjointFromDerefMutNested {}
+impl<T: DerefMut> DisjointFromDerefMutNested for T {}
+impl DisjointFromDerefMutNested for &'static Pin<&'static LocalType> {}
+impl DisjointFromDerefMutNested for Pin<Box<LocalPinned>> {}
+
 fn main() {}
