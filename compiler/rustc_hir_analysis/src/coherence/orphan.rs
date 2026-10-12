@@ -311,8 +311,8 @@ pub(crate) fn orphan_check_impl(
 ///
 /// 1. All type parameters in `Self` must be "covered" by some local type constructor.
 /// 2. Some local type must appear in `Self`.
-/// 3. If the trait is marked `#[rustc_anti_fundamental]`, peeling any leading references from
-///    `Self` must not leave a non-local `#[fundamental]` type.
+/// 3. If the trait is marked `#[rustc_anti_fundamental]`, `Self` must not be headed by a
+///    reference or by a non-local `#[fundamental]` type.
 #[instrument(level = "debug", skip(tcx), ret)]
 fn orphan_check<'tcx>(
     tcx: TyCtxt<'tcx>,

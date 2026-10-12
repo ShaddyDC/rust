@@ -186,9 +186,9 @@ pub struct UncoveredTyParams<I: Interner, T> {
 ///     `LocalType<Vec<T>>`, which is local and has no types between it and
 ///     the type parameter.
 /// 5. If `anti_fundamental_rule` is [`AntiFundamentalRule::Apply`] and the trait
-///    is marked `#[rustc_anti_fundamental]`, peeling any leading references from
-///    `Self` must not leave a non-local `#[fundamental]` type.
-///     - e.g., `Box<LocalType>` and `&Pin<LocalType>` are rejected.
+///    is marked `#[rustc_anti_fundamental]`, `Self` must not be headed by a reference
+///    or by a non-local `#[fundamental]` type.
+///     - e.g., `Box<LocalType>`, `&LocalType` and `&Pin<LocalType>` are rejected.
 ///
 /// The orphan rules actually serve several different purposes:
 ///
@@ -301,38 +301,32 @@ where
     })
 }
 
-/// Peels leading references from `ty` and returns `Some(inner)` if the remaining type
-/// is a non-local `#[fundamental]` type, such as `Pin<LocalType>` in `&Pin<LocalType>`.
+/// Returns `Some(ty)` if `ty` is headed by a non-local `#[fundamental]` type constructor,
+/// i.e. a reference or a `#[fundamental]` ADT from another crate, such as `&LocalType` or
+/// `Pin<LocalType>`.
 fn check_anti_fundamental_head<Infcx, I, E: Debug>(
     infcx: &Infcx,
     in_crate: InCrate,
     mut lazily_normalize_ty: impl FnMut(I::Ty) -> Result<I::Ty, E>,
-    mut ty: I::Ty,
+    ty: I::Ty,
 ) -> Result<Option<I::Ty>, E>
 where
     Infcx: InferCtxtLike<Interner = I>,
     I: Interner,
 {
-    loop {
-        ty = infcx.shallow_resolve(ty);
-        ty = match lazily_normalize_ty(ty)? {
-            norm if norm.is_ty_var() => ty,
-            norm => norm,
-        };
+    let ty = infcx.shallow_resolve(ty);
+    let ty = match lazily_normalize_ty(ty)? {
+        norm if norm.is_ty_var() => ty,
+        norm => norm,
+    };
 
-        if let ty::Ref(_, inner, _) = ty.kind() {
-            ty = inner;
-            continue;
+    Ok(match ty.kind() {
+        ty::Ref(..) => Some(ty),
+        ty::Adt(def, _) if def.is_fundamental() && !in_crate.def_id_is_local(def.def_id()) => {
+            Some(ty)
         }
-
-        break;
-    }
-
-    Ok(matches!(
-        ty.kind(),
-        ty::Adt(def, _) if def.is_fundamental() && !in_crate.def_id_is_local(def.def_id())
-    )
-    .then_some(ty))
+        _ => None,
+    })
 }
 
 struct OrphanChecker<'a, Infcx, I: Interner, F> {

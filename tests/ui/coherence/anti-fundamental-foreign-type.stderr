@@ -18,7 +18,7 @@ LL | impl AntiFundamentalTrait for FundamentalWrapper<LocalType> {}
    |
    = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
 
-error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalType>`
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `&FundamentalWrapper<LocalType>`
   --> $DIR/anti-fundamental-foreign-type.rs:31:31
    |
 LL | impl AntiFundamentalTrait for &FundamentalWrapper<LocalType> {}
@@ -26,7 +26,7 @@ LL | impl AntiFundamentalTrait for &FundamentalWrapper<LocalType> {}
    |
    = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
 
-error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalType>`
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `&mut &FundamentalWrapper<LocalType>`
   --> $DIR/anti-fundamental-foreign-type.rs:35:31
    |
 LL | impl AntiFundamentalTrait for &mut &FundamentalWrapper<LocalType> {}
@@ -58,7 +58,7 @@ LL | impl<T> AntiFundamentalTrait for FundamentalWrapper<LocalGeneric<T>> {}
    |
    = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
 
-error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalGeneric<T>>`
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `&FundamentalWrapper<LocalGeneric<T>>`
   --> $DIR/anti-fundamental-foreign-type.rs:72:34
    |
 LL | impl<T> AntiFundamentalTrait for &FundamentalWrapper<LocalGeneric<T>> {}
@@ -66,7 +66,7 @@ LL | impl<T> AntiFundamentalTrait for &FundamentalWrapper<LocalGeneric<T>> {}
    |
    = note: `AntiFundamentalTrait` is `#[rustc_anti_fundamental]` and cannot be implemented for `#[fundamental]` types from another crate
 
-error: cannot implement `AntiFundamentalTrait` for the fundamental type `FundamentalWrapper<LocalType>`
+error: cannot implement `AntiFundamentalTrait` for the fundamental type `&mut FundamentalWrapper<LocalType>`
   --> $DIR/anti-fundamental-foreign-type.rs:76:31
    |
 LL | impl AntiFundamentalTrait for &mut FundamentalWrapper<LocalType> {}
