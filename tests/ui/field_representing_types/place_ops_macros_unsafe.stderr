@@ -1,0 +1,75 @@
+error[E0133]: call to unsafe function `read_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:15:13
+   |
+LL |     let _ = read_place!(val);
+   |             ^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `write_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:17:5
+   |
+LL |     write_place!(val = 20);
+   |     ^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `borrow_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:19:13
+   |
+LL |     let _ = borrow_place!(@<&i32> val);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `read_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:23:13
+   |
+LL |     let _ = read_place!(pt.x);
+   |             ^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `project_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:23:13
+   |
+LL |     let _ = read_place!(pt.x);
+   |             ^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `write_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:26:5
+   |
+LL |     write_place!(pt.x = 20);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `project_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:26:5
+   |
+LL |     write_place!(pt.x = 20);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `borrow_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:29:13
+   |
+LL |     let _ = borrow_place!(@<&i32> pt.x);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error[E0133]: call to unsafe function `project_place` is unsafe and requires unsafe function or block
+  --> $DIR/place_ops_macros_unsafe.rs:29:13
+   |
+LL |     let _ = borrow_place!(@<&i32> pt.x);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+
+error: aborting due to 9 previous errors
+
+For more information about this error, try `rustc --explain E0133`.

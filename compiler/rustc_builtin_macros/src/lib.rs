@@ -46,6 +46,7 @@ mod iter;
 mod log_syntax;
 mod offload;
 mod pattern_type;
+mod place;
 mod rustdoc_skip_body;
 mod source_util;
 mod test;
@@ -77,6 +78,7 @@ pub fn register_builtin_macros(resolver: &mut dyn ResolverExpand) {
         // tidy-alphabetical-start
         asm: asm::expand_asm,
         assert: assert::expand_assert,
+        borrow_place: place::expand_borrow_place,
         cfg: cfg::expand_cfg,
         cfg_select: cfg_select::expand_cfg_select,
         column: source_util::expand_column,
@@ -107,6 +109,7 @@ pub fn register_builtin_macros(resolver: &mut dyn ResolverExpand) {
         trace_macros: trace_macros::expand_trace_macros,
         unreachable: edition_panic::expand_unreachable,
         view_type: view_type::expand,
+        write_place: place::expand_write_place,
         // tidy-alphabetical-end
     }
 

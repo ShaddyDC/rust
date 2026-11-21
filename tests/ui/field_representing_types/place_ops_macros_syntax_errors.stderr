@@ -1,0 +1,241 @@
+error: unexpected end of macro invocation
+  --> $DIR/place_ops_macros_syntax_errors.rs:10:22
+   |
+LL |         let _: i32 = read_place!();
+   |                      ^^^^^^^^^^^^^ missing tokens in macro arguments
+   |
+note: while trying to match meta-variable `$place:expr`
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+   = note: expected a place expression in `read_place!`
+
+error: no rules expected `y`
+  --> $DIR/place_ops_macros_syntax_errors.rs:12:36
+   |
+LL |         let _: i32 = read_place!(x y);
+   |                                    ^ no rules expected this token in macro call
+   |
+note: while trying to match meta-variable `$place:expr`
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+   = note: expected a place expression in `read_place!`
+
+error: expected expression, found end of macro arguments
+  --> $DIR/place_ops_macros_syntax_errors.rs:14:40
+   |
+LL |         let _: i32 = read_place!(/** */);
+   |                                        ^ expected expression
+   |
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: while parsing argument for this `expr` macro fragment
+
+error: expected `place = value` in `write_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:17:9
+   |
+LL |         write_place!();
+   |         ^^^^^^^^^^^^^^
+
+error: expected `place = value` in `write_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:19:9
+   |
+LL |         write_place!(x);
+   |         ^^^^^^^^^^^^^^^
+
+error: expected `place = value` in `write_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:21:9
+   |
+LL |         write_place!(x += 1);
+   |         ^^^^^^^^^^^^^^^^^^^^
+
+error: expected a place expression in `write_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:23:22
+   |
+LL |         write_place!(= 1);
+   |                      ^
+
+error: expected expression, found end of macro arguments
+  --> $DIR/place_ops_macros_syntax_errors.rs:25:25
+   |
+LL |         write_place!(x =);
+   |                         ^ expected expression
+
+error: expected one of `.`, `?`, or an operator, found `2`
+  --> $DIR/place_ops_macros_syntax_errors.rs:27:28
+   |
+LL |         write_place!(x = 1 2);
+   |                            ^ expected one of `.`, `?`, or an operator
+
+error: expected one of `!`, `.`, `::`, `?`, `{`, or an operator, found `y`
+  --> $DIR/place_ops_macros_syntax_errors.rs:29:24
+   |
+LL |         write_place!(x y = 1);
+   |                        ^ expected one of `!`, `.`, `::`, `?`, `{`, or an operator
+
+error: expected expression, found `=`
+  --> $DIR/place_ops_macros_syntax_errors.rs:31:29
+   |
+LL |         write_place!(/** */ = 1);
+   |                             ^ expected expression
+
+error: expected expression, found end of macro arguments
+  --> $DIR/place_ops_macros_syntax_errors.rs:33:32
+   |
+LL |         write_place!(x = /** */);
+   |                                ^ expected expression
+
+error: expected `place = value` in `write_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:35:9
+   |
+LL |         write_place!((x = 1));
+   |         ^^^^^^^^^^^^^^^^^^^^^
+
+error: invalid comparison operator `===`
+  --> $DIR/place_ops_macros_syntax_errors.rs:37:24
+   |
+LL |         write_place!(x === 1);
+   |                        ^^^
+   |
+help: `===` is not a valid comparison operator, use `==`
+   |
+LL -         write_place!(x === 1);
+LL +         write_place!(x == 1);
+   |
+
+error: invalid comparison operator `===`
+  --> $DIR/place_ops_macros_syntax_errors.rs:39:28
+   |
+LL |         write_place!(x = 1 === 2);
+   |                            ^^^
+   |
+help: `===` is not a valid comparison operator, use `==`
+   |
+LL -         write_place!(x = 1 === 2);
+LL +         write_place!(x = 1 == 2);
+   |
+
+error: expected expression, found `let` statement
+  --> $DIR/place_ops_macros_syntax_errors.rs:41:22
+   |
+LL |         write_place!(let x = 1);
+   |                      ^^^
+   |
+   = note: only supported directly in conditions of `if` and `while` expressions
+
+error[E0658]: attributes on expressions are experimental
+  --> $DIR/place_ops_macros_syntax_errors.rs:43:26
+   |
+LL |         write_place!(x = #[cfg(false)] 1);
+   |                          ^^^^^^^^^^^^^
+   |
+   = note: see issue #15701 <https://github.com/rust-lang/rust/issues/15701> for more information
+   = help: add `#![feature(stmt_expr_attributes)]` to the crate attributes to enable
+   = note: this compiler was built on YYYY-MM-DD; consider upgrading it if it is out of date
+
+error: `cfg` is not supported in this position
+  --> $DIR/place_ops_macros_syntax_errors.rs:43:26
+   |
+LL |         write_place!(x = #[cfg(false)] 1);
+   |                          ^^^^^^^^^^^^^
+
+error[E0658]: attributes on expressions are experimental
+  --> $DIR/place_ops_macros_syntax_errors.rs:46:26
+   |
+LL |         write_place!(x = #[allow(unused)] 1);
+   |                          ^^^^^^^^^^^^^^^^
+   |
+   = note: see issue #15701 <https://github.com/rust-lang/rust/issues/15701> for more information
+   = help: add `#![feature(stmt_expr_attributes)]` to the crate attributes to enable
+   = note: this compiler was built on YYYY-MM-DD; consider upgrading it if it is out of date
+
+error: expected `@` before place expression in `borrow_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:49:23
+   |
+LL |         let _: &i32 = borrow_place!();
+   |                       ^^^^^^^^^^^^^^^
+
+error: expected `@` before place expression in `borrow_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:51:37
+   |
+LL |         let _: &i32 = borrow_place!(x);
+   |                                     ^
+
+error: expected a place expression in `borrow_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:53:23
+   |
+LL |         let _: &i32 = borrow_place!(@);
+   |                       ^^^^^^^^^^^^^^^^
+
+error: expected a place expression in `borrow_place!`
+  --> $DIR/place_ops_macros_syntax_errors.rs:55:23
+   |
+LL |         let _: &i32 = borrow_place!(@<&i32>);
+   |                       ^^^^^^^^^^^^^^^^^^^^^^
+
+error: expected one of `!`, `(`, `::`, `<`, or `>`, found `x`
+  --> $DIR/place_ops_macros_syntax_errors.rs:57:44
+   |
+LL |         let _: &i32 = borrow_place!(@<&i32 x);
+   |                                            ^ expected one of `!`, `(`, `::`, `<`, or `>`
+
+error: unexpected `...`
+  --> $DIR/place_ops_macros_syntax_errors.rs:59:39
+   |
+LL |         let _: &i32 = borrow_place!(@<...> x);
+   |                                       ^^^
+   |
+   = note: only `extern "C"` and `extern "C-unwind"` functions may have a C variable argument list
+
+error: expected type, found lifetime
+  --> $DIR/place_ops_macros_syntax_errors.rs:61:39
+   |
+LL |         let _: &i32 = borrow_place!(@<'a> x);
+   |                                       ^^ expected type
+
+error: invalid comparison operator `===`
+  --> $DIR/place_ops_macros_syntax_errors.rs:63:46
+   |
+LL |         let _: &i32 = borrow_place!(@<i32> x === 1);
+   |                                              ^^^
+   |
+help: `===` is not a valid comparison operator, use `==`
+   |
+LL -         let _: &i32 = borrow_place!(@<i32> x === 1);
+LL +         let _: &i32 = borrow_place!(@<i32> x == 1);
+   |
+
+error: expected expression, found `let` statement
+  --> $DIR/place_ops_macros_syntax_errors.rs:65:44
+   |
+LL |         let _: &i32 = borrow_place!(@<i32> let y = 1);
+   |                                          - ^^^
+   |                                          |
+   |                                          expected an expression after this
+   |
+   = note: only supported directly in conditions of `if` and `while` expressions
+
+error: expected one of `!`, `.`, `::`, `?`, `{`, or an operator, found `y`
+  --> $DIR/place_ops_macros_syntax_errors.rs:67:40
+   |
+LL |         let _: &i32 = borrow_place!(@x y);
+   |                                        ^ expected one of `!`, `.`, `::`, `?`, `{`, or an operator
+
+error: expected expression, found `>`
+  --> $DIR/place_ops_macros_syntax_errors.rs:69:43
+   |
+LL |         let _: &i32 = borrow_place!(@<i32>> x);
+   |                                           ^ expected expression
+
+error: expected expression, found `=`
+  --> $DIR/place_ops_macros_syntax_errors.rs:71:43
+   |
+LL |         let _: &i32 = borrow_place!(@<i32>= x);
+   |                                           ^ expected expression
+
+error: expected expression, found end of macro arguments
+  --> $DIR/place_ops_macros_syntax_errors.rs:73:44
+   |
+LL |         let _: &i32 = borrow_place!(@/** */);
+   |                                            ^ expected expression
+
+error: aborting due to 32 previous errors
+
+For more information about this error, try `rustc --explain E0658`.

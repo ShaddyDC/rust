@@ -1,0 +1,160 @@
+error[E0745]: cannot take address of a temporary
+  --> $DIR/place_ops_macros_errors.rs:54:34
+   |
+LL |         let _: i32 = read_place!(42);
+   |                                  ^^ temporary value
+
+error[E0745]: cannot take address of a temporary
+  --> $DIR/place_ops_macros_errors.rs:56:22
+   |
+LL |         write_place!(42 = 1);
+   |                      ^^ temporary value
+
+error[E0745]: cannot take address of a temporary
+  --> $DIR/place_ops_macros_errors.rs:58:23
+   |
+LL |         write_place!(*dummy_ptr::<dyn Iterator<Item = i32>>() = 1);
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ temporary value
+
+error[E0745]: cannot take address of a temporary
+  --> $DIR/place_ops_macros_errors.rs:60:39
+   |
+LL |         let _ = borrow_place!(@<&i32> 42);
+   |                                       ^^ temporary value
+
+error[E0283]: type annotations needed
+  --> $DIR/place_ops_macros_errors.rs:21:13
+   |
+LL |         let _ = borrow_place!(@pt.x);
+   |             ^   --------------------
+   |                 |
+   |                 type must be known at this point
+   |                 required by a bound introduced by this call
+   |
+   = note: multiple `impl`s satisfying `RefHandle<'_, i32>: BorrowPlace<_>` found in the `core` crate:
+           - impl<'a, 'b, T> BorrowPlace<&'b T> for RefHandle<'a, T>
+             where 'a: 'b, T: ?Sized;
+           - impl<'a, T> BorrowPlace<*const T> for RefHandle<'a, T>
+             where T: ?Sized;
+help: consider giving this pattern a type
+   |
+LL |         let _: /* Type */ = borrow_place!(@pt.x);
+   |              ++++++++++++
+
+error[E0277]: the trait bound `RefHandle<'_, i32>: WritePlace` is not satisfied
+  --> $DIR/place_ops_macros_errors.rs:32:9
+   |
+LL |         write_place!(shared.x = 30);
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |         |
+   |         the nightly-only, unstable trait `WritePlace` is not implemented for `RefHandle<'_, i32>`
+   |         required by a bound introduced by this call
+   |
+help: the following other types implement trait `WritePlace`
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `LocalHandle<T>`
+  ::: $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `MutHandle<'a, T>`
+
+error[E0277]: the trait bound `RefHandle<'_, i32>: BorrowPlace<&mut i32>` is not satisfied
+  --> $DIR/place_ops_macros_errors.rs:34:17
+   |
+LL |         let _ = borrow_place!(@<&mut i32> shared.x);
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |                 |
+   |                 the nightly-only, unstable trait `BorrowPlace<&mut i32>` is not implemented for `RefHandle<'_, i32>`
+   |                 required by a bound introduced by this call
+   |
+help: `RefHandle<'_, T>` implements trait `BorrowPlace<Output>`
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+  ::: $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `BorrowPlace<&T>`
+  ::: $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `BorrowPlace<*const T>`
+
+error[E0277]: the trait bound `RefHandle<'_, i32>: BorrowPlace<*mut i32>` is not satisfied
+  --> $DIR/place_ops_macros_errors.rs:36:17
+   |
+LL |         let _ = borrow_place!(@<*mut i32> shared.x);
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |                 |
+   |                 the nightly-only, unstable trait `BorrowPlace<*mut i32>` is not implemented for `RefHandle<'_, i32>`
+   |                 required by a bound introduced by this call
+   |
+help: `RefHandle<'_, T>` implements trait `BorrowPlace<Output>`
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+  ::: $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `BorrowPlace<&T>`
+  ::: $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `BorrowPlace<*const T>`
+
+error[E0277]: the trait bound `RefHandle<'_, i32>: BorrowPlace<NonNull<i32>>` is not satisfied
+  --> $DIR/place_ops_macros_errors.rs:38:17
+   |
+LL |         let _ = borrow_place!(@<NonNull<i32>> shared.x);
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |                 |
+   |                 the nightly-only, unstable trait `BorrowPlace<NonNull<i32>>` is not implemented for `RefHandle<'_, i32>`
+   |                 required by a bound introduced by this call
+   |
+help: `RefHandle<'_, T>` implements trait `BorrowPlace<Output>`
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+  ::: $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `BorrowPlace<&T>`
+  ::: $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: `BorrowPlace<*const T>`
+
+error[E0277]: the trait bound `NonCopy: Copy` is not satisfied
+  --> $DIR/place_ops_macros_errors.rs:40:17
+   |
+LL |         let _ = read_place!(shared.nc);
+   |                 ^^^^^^^^^^^^^^^^^^^^^^
+   |                 |
+   |                 the trait `Copy` is not implemented for `NonCopy`
+   |                 required by a bound introduced by this call
+   |
+help: the trait `ReadPlace` is conditionally implemented for `RefHandle<'_, T>`
+  --> $SRC_DIR/core/src/ops/place.rs:LL:COL
+   |
+   = note: unsatisfied requirement introduced here: `NonCopy: Copy`
+   = note: required for `RefHandle<'_, NonCopy>` to implement `ReadPlace`
+help: consider annotating `NonCopy` with `#[derive(Copy)]`
+   |
+LL + #[derive(Copy)]
+LL | struct NonCopy(i32);
+   |
+
+error[E0277]: the trait bound `[i32]: Copy` is not satisfied
+  --> $DIR/place_ops_macros_errors.rs:47:17
+   |
+LL |         let _ = read_place!(*slice);
+   |                 ^^^^^^^^^^^^^^^^^^^
+   |                 |
+   |                 the trait `Copy` is not implemented for `[i32]`
+   |                 required by a bound introduced by this call
+   |
+help: the trait `Copy` is implemented for `[T; N]`
+  --> $SRC_DIR/core/src/array/mod.rs:LL:COL
+   = note: required for `RefHandle<'_, [i32]>` to implement `ReadPlace`
+
+error[E0277]: the size for values of type `[i32]` cannot be known at compilation time
+  --> $DIR/place_ops_macros_errors.rs:47:17
+   |
+LL |         let _ = read_place!(*slice);
+   |                 ^^^^^^^^^^^^^^^^^^^ doesn't have a size known at compile-time
+   |
+   = help: the trait `Sized` is not implemented for `[i32]`
+   = note: the return type of a function must have a statically known size
+
+error: aborting due to 12 previous errors
+
+Some errors have detailed explanations: E0277, E0283, E0745.
+For more information about an error, try `rustc --explain E0277`.

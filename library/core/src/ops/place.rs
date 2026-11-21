@@ -15,6 +15,71 @@ pub trait PlaceHandle: Sized {
     type Target: ?Sized;
 }
 
+/// Read from a place.
+///
+/// # Safety
+///
+/// Implementors must ensure that [`read_place`](Self::read_place) reads a valid value of
+/// `Self::Target` from the represented place whenever the method's caller preconditions hold.
+#[unstable(feature = "field_projections", issue = "145383")]
+pub unsafe trait ReadPlace: PlaceHandle {
+    /// Read from the place.
+    ///
+    /// # Safety
+    ///
+    /// - `self` must refer to a readable, properly aligned, and initialized value of
+    ///   `Self::Target` with valid read provenance.
+    /// - There must be no conflicting concurrent writes to the place during the read.
+    /// - If `Self::Target` is not [`Copy`], the caller must ensure ownership is not duplicated
+    ///   (e.g., that the source place is not later read or dropped without being reinitialized).
+    #[unstable(feature = "field_projections", issue = "145383")]
+    unsafe fn read_place(self) -> Self::Target;
+}
+
+/// Write to a place without reading or dropping its previous contents.
+///
+/// # Safety
+///
+/// Implementors must ensure that [`write_place`](Self::write_place) writes `value` into the
+/// represented place without reading or dropping any prior value whenever the method's caller
+/// preconditions hold.
+#[unstable(feature = "field_projections", issue = "145383")]
+pub unsafe trait WritePlace: PlaceHandle {
+    /// Write to the place without dropping the previous value.
+    ///
+    /// Like [`core::ptr::write`](crate::ptr::write), this overwrites the place directly without
+    /// running [`Drop`] on any existing value. Callers writing to an already-initialized place
+    /// containing a value with drop glue must drop it separately to avoid leaks.
+    ///
+    /// # Safety
+    ///
+    /// - `self` must refer to a writable, properly aligned place for `Self::Target` with valid
+    ///   mutable provenance (for example, not an immutable local variable or read-only `static`).
+    /// - There must be no conflicting concurrent accesses to the place during the write.
+    #[unstable(feature = "field_projections", issue = "145383")]
+    unsafe fn write_place(self, value: Self::Target);
+}
+
+/// Borrow a place as `Output`.
+///
+/// # Safety
+///
+/// Implementors must ensure that [`borrow_place`](Self::borrow_place) produces a valid `Output`
+/// pointing to the represented place whenever the method's caller preconditions hold.
+#[unstable(feature = "field_projections", issue = "145383")]
+pub unsafe trait BorrowPlace<Output>: PlaceHandle {
+    /// Borrow the place as `Output`.
+    ///
+    /// # Safety
+    ///
+    /// - `self` must satisfy all validity, alignment, provenance, non-nullness, aliasing, and
+    ///   lifetime invariants required to construct and use `Output` (for example, shared or
+    ///   exclusive aliasing rules for `&T` / `&mut T` across the returned lifetime, mutable
+    ///   provenance for `&mut T`, and non-nullness for [`NonNull<T>`]).
+    #[unstable(feature = "field_projections", issue = "145383")]
+    unsafe fn borrow_place(self) -> Output;
+}
+
 #[unstable(feature = "field_projections", issue = "145383")]
 #[lang = "deref_place"]
 pub unsafe trait DerefPlace: PlaceHandle
@@ -107,6 +172,44 @@ pub macro raw_handle($place:expr) {
     k#raw_handle($place)
 }
 
+/// Reads a value from a place expression.
+///
+/// Desugars `read_place!(place)` to `ReadPlace::read_place(raw_handle!(place))`.
+#[unstable(feature = "field_projections", issue = "145383")]
+#[allow_internal_unstable(internal_syntax)]
+#[rustc_macro_transparency = "semiopaque"]
+#[diagnostic::opaque]
+#[diagnostic::on_unmatched_args(note = "expected a place expression in `read_place!`")]
+pub macro read_place($place:expr) {
+    $crate::ops::place::ReadPlace::read_place(k#raw_handle($place))
+}
+
+/// Writes a value to a place expression without dropping its previous contents.
+///
+/// Syntax: `write_place!(place = value)`.
+///
+/// Desugars to `WritePlace::write_place(raw_handle!(place), value)`, evaluating the place handle
+/// before `value`.
+#[unstable(feature = "field_projections", issue = "145383")]
+#[rustc_builtin_macro]
+#[rustc_macro_transparency = "semiopaque"]
+pub macro write_place($($tt:tt)*) {
+    /* compiler built-in */
+}
+
+/// Borrows a place expression as the specified (or inferred) reference or pointer type.
+///
+/// Syntax:
+/// - `borrow_place!(@place)` — desugars to `BorrowPlace::<_>::borrow_place(raw_handle!(place))`.
+/// - `borrow_place!(@<Type> place)` — desugars to
+///   `BorrowPlace::<Type>::borrow_place(raw_handle!(place))`.
+#[unstable(feature = "field_projections", issue = "145383")]
+#[rustc_builtin_macro]
+#[rustc_macro_transparency = "semiopaque"]
+pub macro borrow_place($($tt:tt)*) {
+    /* compiler built-in */
+}
+
 #[unstable(feature = "field_projections", issue = "145383")]
 impl<T: ?Sized> Clone for LocalHandle<T> {
     fn clone(&self) -> Self {
@@ -141,6 +244,73 @@ impl<T: ?Sized> LocalHandle<T> {
 #[unstable(feature = "field_projections", issue = "145383")]
 impl<T: ?Sized> PlaceHandle for LocalHandle<T> {
     type Target = T;
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<T> ReadPlace for LocalHandle<T> {
+    #[inline]
+    unsafe fn read_place(self) -> Self::Target {
+        // SAFETY: The caller guarantees `self.ptr` is valid for reads, properly aligned,
+        // initialized, and that non-`Copy` ownership is not duplicated.
+        unsafe { self.ptr.read() }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<T> WritePlace for LocalHandle<T> {
+    #[inline]
+    unsafe fn write_place(self, value: Self::Target) {
+        // SAFETY: The caller guarantees `self.ptr` has writable provenance (not derived from
+        // an immutable local or read-only `static`), is valid for writes, and is properly aligned.
+        unsafe { self.ptr.write(value) }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T: ?Sized> BorrowPlace<&'a T> for LocalHandle<T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> &'a T {
+        // SAFETY: `LocalHandle` does not track lifetimes; the caller guarantees `self.ptr` is
+        // non-null, aligned, valid for shared reads, initialized, and not mutably aliased for `'a`.
+        unsafe { &*self.ptr.cast_const() }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T: ?Sized> BorrowPlace<&'a mut T> for LocalHandle<T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> &'a mut T {
+        // SAFETY: `LocalHandle` does not track lifetimes or mutability; the caller guarantees
+        // `self.ptr` has writable provenance, is non-null, aligned, initialized, and unaliased
+        // for `'a`.
+        unsafe { &mut *self.ptr }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<T: ?Sized> BorrowPlace<*const T> for LocalHandle<T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> *const T {
+        self.ptr
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<T: ?Sized> BorrowPlace<*mut T> for LocalHandle<T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> *mut T {
+        self.ptr
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<T: ?Sized> BorrowPlace<NonNull<T>> for LocalHandle<T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> NonNull<T> {
+        // SAFETY: `LocalHandle` may hold a null pointer (e.g., via dereferencing a raw pointer);
+        // the caller guarantees `self.ptr` is non-null.
+        unsafe { NonNull::new_unchecked(self.ptr) }
+    }
 }
 
 #[unstable(feature = "field_projections", issue = "145383")]
@@ -226,6 +396,37 @@ impl<'a, T: ?Sized> PlaceHandle for RefHandle<'a, T> {
 }
 
 #[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T: Copy> ReadPlace for RefHandle<'a, T> {
+    #[inline]
+    unsafe fn read_place(self) -> Self::Target {
+        // SAFETY: `T: Copy` prevents duplicating ownership; the caller guarantees `self.ptr` is
+        // valid for reads, properly aligned, and initialized with no conflicting writes.
+        unsafe { self.ptr.read() }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, 'b, T: ?Sized> BorrowPlace<&'b T> for RefHandle<'a, T>
+where
+    'a: 'b,
+{
+    #[inline]
+    unsafe fn borrow_place(self) -> &'b T {
+        // SAFETY: `'a: 'b` bounds the reference lifetime; the caller guarantees `self.ptr` is
+        // aligned, valid for shared reads, initialized, and not mutably aliased for `'b`.
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T: ?Sized> BorrowPlace<*const T> for RefHandle<'a, T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> *const T {
+        self.ptr.as_ptr()
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
 unsafe impl<'a, S> ProjectPlace<S> for RefHandle<'a, S::Source>
 where
     S: Subplace,
@@ -300,6 +501,77 @@ impl<'a, T: ?Sized> MutHandle<'a, T> {
 #[unstable(feature = "field_projections", issue = "145383")]
 impl<'a, T: ?Sized> PlaceHandle for MutHandle<'a, T> {
     type Target = T;
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T> ReadPlace for MutHandle<'a, T> {
+    #[inline]
+    unsafe fn read_place(self) -> Self::Target {
+        // SAFETY: The caller guarantees `self.ptr` is valid for reads, properly aligned,
+        // initialized, and that non-`Copy` ownership is not duplicated.
+        unsafe { self.ptr.read() }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T> WritePlace for MutHandle<'a, T> {
+    #[inline]
+    unsafe fn write_place(self, value: Self::Target) {
+        // SAFETY: The caller guarantees `self.ptr` is valid for exclusive writes and properly
+        // aligned, and handles dropping any prior value if required.
+        unsafe { self.ptr.write(value) }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, 'b, T: ?Sized> BorrowPlace<&'b T> for MutHandle<'a, T>
+where
+    'a: 'b,
+{
+    #[inline]
+    unsafe fn borrow_place(self) -> &'b T {
+        // SAFETY: `'a: 'b` bounds the reference lifetime; the caller guarantees `self.ptr` is
+        // aligned, valid for shared reads, initialized, and not mutably aliased for `'b`.
+        unsafe { self.ptr.as_ref() }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, 'b, T: ?Sized> BorrowPlace<&'b mut T> for MutHandle<'a, T>
+where
+    'a: 'b,
+{
+    #[inline]
+    unsafe fn borrow_place(mut self) -> &'b mut T {
+        // SAFETY: `'a: 'b` bounds the reference lifetime; because `MutHandle` is `Copy`, the caller
+        // must guarantee exclusive, unaliased access to `self.ptr` for `'b`, along with alignment
+        // and initialization.
+        unsafe { self.ptr.as_mut() }
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T: ?Sized> BorrowPlace<*const T> for MutHandle<'a, T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> *const T {
+        self.ptr.as_ptr()
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T: ?Sized> BorrowPlace<*mut T> for MutHandle<'a, T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> *mut T {
+        self.ptr.as_ptr()
+    }
+}
+
+#[unstable(feature = "field_projections", issue = "145383")]
+unsafe impl<'a, T: ?Sized> BorrowPlace<NonNull<T>> for MutHandle<'a, T> {
+    #[inline]
+    unsafe fn borrow_place(self) -> NonNull<T> {
+        self.ptr
+    }
 }
 
 #[unstable(feature = "field_projections", issue = "145383")]

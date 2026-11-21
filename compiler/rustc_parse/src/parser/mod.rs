@@ -807,7 +807,8 @@ impl<'a> Parser<'a> {
     }
 
     /// Eats `<` possibly breaking tokens like `<<` in process.
-    fn eat_lt(&mut self) -> bool {
+    // Public for rustc_builtin_macros usage.
+    pub fn eat_lt(&mut self) -> bool {
         let ate = self.break_and_eat(exp!(Lt));
         if ate {
             // See doc comment for `unmatched_angle_bracket_count`.
@@ -825,7 +826,8 @@ impl<'a> Parser<'a> {
 
     /// Eats `>` possibly breaking tokens like `>>` in process.
     /// Signals an error if `>` was not eaten.
-    fn expect_gt(&mut self) -> PResult<'a, ()> {
+    // Public for rustc_builtin_macros usage.
+    pub fn expect_gt(&mut self) -> PResult<'a, ()> {
         if self.break_and_eat(exp!(Gt)) {
             // See doc comment for `unmatched_angle_bracket_count`.
             if self.unmatched_angle_bracket_count > 0 {

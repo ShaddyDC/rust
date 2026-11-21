@@ -1222,3 +1222,25 @@ pub(crate) struct NamedArgumentUsedPositionally {
     pub name: String,
     pub named_arg_name: String,
 }
+
+#[derive(Diagnostic)]
+#[diag("expected a place expression in `{$macro_name}!`")]
+pub(crate) struct PlaceMacroExpectedPlace {
+    #[primary_span]
+    pub span: Span,
+    pub macro_name: &'static str,
+}
+
+#[derive(Diagnostic)]
+#[diag("expected `place = value` in `write_place!`")]
+pub(crate) struct WritePlaceExpectedAssign {
+    #[primary_span]
+    pub span: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag("expected `@` before place expression in `borrow_place!`")]
+pub(crate) struct BorrowPlaceExpectedAt {
+    #[primary_span]
+    pub span: Span,
+}
